@@ -1,30 +1,21 @@
 
 require 'pg'
 require 'fileutils'
+require 'mimemagic'
 
 module DSpace
 
   # PostgreSQL connection
   class Connection
 
-#    def initialize(host = 'localhost', port = 5432, dbname = 'database', user = 'user', password = 'secret', options = {})
     def initialize(options = {})
 
-#      connection_args = {
-#        :dbname   => dbname,
-#        :host     => host,
-#        :port     => port,
-#        :user     => user,
-#        :password => password
-#      }
       connection_args = {}.merge options.reject { |k,v| k == :assetstore }
 
       @pg = PG.connect connection_args
-
       @items = {}
       @collections = {}
       @epersons = {}
-
       @assetstore = options.fetch(:assetstore, '/mnt/assetstore')
     end
 
@@ -82,14 +73,11 @@ module DSpace
 
           internal_id = row['internal_id']
           if internal_id
-
-            # file_path = [ internal_id[0..1], internal_id[2..3], internal_id[4..5], internal_id ].join '/'
-            # file = File.new File.join(@assetstore, file_path)
             src_file_path = File.join @assetstore, internal_id[0..1], internal_id[2..3], internal_id[4..5], internal_id
 
             # File extensions aren't appended to the file name
             # Generate the file extension using the MIME type
-            extension = MimeMagic::EXTENSIONS.invert[row['mimetype']] || 'bin'
+            extension = ::MimeMagic::EXTENSIONS.invert[row['mimetype']] || 'bin'
             tmp_file_path = File.join '/tmp', "#{internal_id}.#{extension}"
 
             # Copy the file to the temporary directory
@@ -143,14 +131,14 @@ module DSpace
 
     def items(options = {})
 
-      collection_name = options.fetch(:collection, '')
-      community_name = options.fetch(:community, '')
+      collection_name = options.fetch(:collection, nil)
+      community_name = options.fetch(:community, nil)
       division = options.fetch(:division, 'Institutional Division')
       dept_depth = options.fetch(:dept_index, 1)
 
       items = []
 
-      if not community_name.nil? and not community_name.empty?
+      if not community_name.nil? and not collection_name.nil?
 
         pg_query = "SELECT item_id, submitter_id, in_archive, withdrawn, last_modified, owning_collection FROM collection AS coll LEFT JOIN community2collection AS c2c ON c2c.collection_id=coll.collection_id LEFT JOIN community2community AS comm2comm ON comm2comm.child_comm_id=c2c.community_id INNER JOIN community as comm ON comm.community_id=comm2comm.parent_comm_id LEFT JOIN item AS i ON i.owning_collection=coll.collection_id WHERE comm.name = '#{community_name}' AND item_id IS NOT NULL"
       else
@@ -168,10 +156,8 @@ module DSpace
           item_fields = metadata_fields row['item_id']
 
           if row['last_modified'].nil?
-
             last_modified = DateTime.now
           else
-            
             last_modified = DateTime.parse(row['last_modified'])
           end
 
@@ -185,11 +171,9 @@ module DSpace
                            :fields => item_fields
                            )
 
-          if not community_name.empty? and not collection_name.empty?
-
+          if not community_name.nil? and not collection_name.nil?
             items << item if item_collection.communities.include? community_name
           else
-              
             items << item
           end
         end
