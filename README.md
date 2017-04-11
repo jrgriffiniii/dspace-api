@@ -1,2 +1,2 @@
-# Legacy Lafayette Digital Repository (DSpace 1.7.2) API
-An API implemented for the migration of assets from the legacy LDR implementation of DSpace into an implementation of Sufia 6.6.0
+# (DSpace 1.7.2) Lafayette Digital Repository API
+A migration API for the DSpace 1.7.2 Lafayette Digital Repository implemented in Ruby
