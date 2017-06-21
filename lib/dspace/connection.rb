@@ -168,7 +168,7 @@ module DSpace
                            :last_modified => last_modified,
                            :owning_collection => item_collection,
                            :bundle => item_bitstreams,
-                           :fields => item_fields
+                           :metadata_fields => item_fields
                            )
 
           if not community_name.nil? and not collection_name.nil?
@@ -194,9 +194,7 @@ module DSpace
 
           item_eperson = eperson row['submitter_id']
           item_collection = collection row['owning_collection'], division: division, dept_depth: dept_depth
-
           item_bitstreams = bitstreams row['item_id']
-
           item_fields = metadata_fields row['item_id']
 
           item = Item.new( row['item_id'],
@@ -206,9 +204,8 @@ module DSpace
                            :last_modified => DateTime.parse(row['last_modified']),
                            :owning_collection => item_collection,
                            :bundle => item_bitstreams,
-                           :fields => item_fields
+                           :metadata_fields => item_fields
                            )
-
 
         end
       end

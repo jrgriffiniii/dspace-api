@@ -18,7 +18,6 @@ module DSpace
       @copyright_text = options.fetch(:copyright_text, '')
       @side_bar_text = options.fetch(:side_bar_text, '')
 
-      # Can this be mapped into Sufia?
       @admin = options.fetch(:admin, nil)
 
       @items = options.fetch(:items, [])

@@ -77,8 +77,7 @@ describe DSpace::Connection do
   describe "#bitstreams" do
     before do
       pg = double('pg')
-      allow(pg).to receive(:exec).and_yield([{
-                                               'internal_id' => '0123456',
+      allow(pg).to receive(:exec).and_yield([{ 'internal_id' => '0123456',
                                                'mimetype' => 'bin',
                                                'short_description' => '',
                                                'bitstream_id' => 0,
