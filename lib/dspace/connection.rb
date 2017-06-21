@@ -130,11 +130,10 @@ module DSpace
     end
 
     def items(options = {})
-
       collection_name = options.fetch(:collection, nil)
       community_name = options.fetch(:community, nil)
       division = options.fetch(:division, 'Institutional Division')
-      dept_depth = options.fetch(:dept_index, 1)
+      organization = options.fetch(:organization, 'Institution')
 
       items = []
 
@@ -147,11 +146,9 @@ module DSpace
       end
 
       @pg.exec( pg_query ) do |result|
-
         result.each do |row|
-
           item_eperson = eperson row['submitter_id']
-          item_collection = collection row['owning_collection'], division: division, dept_depth: dept_depth
+          item_collection = collection(row['owning_collection'], division: division)
           item_bitstreams = bitstreams row['item_id']
           item_fields = metadata_fields row['item_id']
 
@@ -168,8 +165,9 @@ module DSpace
                            :last_modified => last_modified,
                            :owning_collection => item_collection,
                            :bundle => item_bitstreams,
-                           :metadata_fields => item_fields
-                           )
+                           :metadata_fields => item_fields,
+                           organization: organization
+                         )
 
           if not community_name.nil? and not collection_name.nil?
             items << item if item_collection.communities.include? community_name
@@ -185,7 +183,7 @@ module DSpace
     def item(id, options = {})
 
       division = options.fetch(:division, 'Institutional Division')
-      dept_depth = options.fetch(:dept_index, 1)
+      organization = options.fetch(:organization, 'Institution')
 
       item = nil
       @pg.exec( "SELECT item_id, submitter_id, in_archive, withdrawn, last_modified, owning_collection FROM item WHERE item_id=$1", [id] ) do |result|
@@ -193,19 +191,20 @@ module DSpace
         result.each do |row|
 
           item_eperson = eperson row['submitter_id']
-          item_collection = collection row['owning_collection'], division: division, dept_depth: dept_depth
+          item_collection = collection(row['owning_collection'], division: division)
           item_bitstreams = bitstreams row['item_id']
           item_fields = metadata_fields row['item_id']
 
           item = Item.new( row['item_id'],
-                           :submitter => item_eperson,
-                           :in_archive => row['in_archive'] == 't',
-                           :withdrawn => row['withdrawn'] == 't',
-                           :last_modified => DateTime.parse(row['last_modified']),
-                           :owning_collection => item_collection,
-                           :bundle => item_bitstreams,
-                           :metadata_fields => item_fields
-                           )
+                           submitter: item_eperson,
+                           in_archive: row['in_archive'] == 't',
+                           withdrawn: row['withdrawn'] == 't',
+                           last_modified: DateTime.parse(row['last_modified']),
+                           owning_collection: item_collection,
+                           bundle: item_bitstreams,
+                           metadata_fields: item_fields,
+                           organization: organization
+                         )
 
         end
       end
@@ -213,8 +212,7 @@ module DSpace
       item
     end
 
-    def communities(collection_id, division: 'Institutional Division', dept_index: 1)
-
+    def communities(collection_id, division: 'Institutional Division')
       communities = []
 
       # community2collection
@@ -236,20 +234,17 @@ module DSpace
         end
       end
 
-      { :dept => communities[dept_index],
-        :div => division }
+      { department: communities.last, division: division }
     end
 
     # Retrieve a collection
-    def collection(id, division: 'Institutional Division', dept_depth: 1)
+    def collection(id, division: 'Institutional Division')
 
       collection = nil
       @pg.exec( "SELECT collection_id, name, short_description, introductory_text, provenance_description, license, copyright_text, side_bar_text FROM collection WHERE collection_id=$1", [id] ) do |result|
 
         result.each do |row|
-
-          coll_communities = communities row['collection_id'], division: division, dept_index: dept_depth
-
+          coll_communities = communities(row['collection_id'], division: division)
           collection = Collection.new( row['collection_id'],
                                        :name => row['name'],
                                        :short_description => row['short_description'],
@@ -270,12 +265,8 @@ module DSpace
     def vocabulary(element, qualifier: nil)
 
       terms = []
-
-      # select distinct(v.text_value) from metadatavalue as v inner join metadatafieldregistry as r on r.metadata_field_id=v.metadata_field_id where r.element='contributor' and v.text_value != ''
       @pg.exec( "SELECT DISTINCT(v.text_value) FROM metadatavalue AS v INNER JOIN metadatafieldregistry AS r ON r.metadata_field_id=v.metadata_field_id WHERE r.element=$1 AND v.text_value != ''", [element] ) do |result|
-
         result.each do |row|
-
           terms << row['text_value']
         end
       end

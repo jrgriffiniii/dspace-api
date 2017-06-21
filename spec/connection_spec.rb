@@ -46,10 +46,10 @@ describe DSpace::Connection do
     it 'creates a Community object using an ID' do
       result = subject.communities(0)
       expect(result).to be_a(Hash)
-      expect(result).to include(:dept)
-      expect(result).to include(:div)
-      expect(result[:dept]).to eq('My Community')
-      expect(result[:div]).to eq('Institutional Division')
+      expect(result).to include(:department)
+      expect(result).to include(:division)
+      expect(result[:department]).to eq('My Community')
+      expect(result[:division]).to eq('Institutional Division')
     end
   end
 
@@ -113,6 +113,40 @@ describe DSpace::Connection do
       result = subject.metadata_fields(0)
       expect(result.length).to eq(1)
       expect(result.first).to be_a(DSpace::MetadataField)
+    end
+  end
+
+  describe "#item" do
+    before do
+      pg = double('pg')
+      allow(pg).to receive(:exec).and_yield([{'submitter_id' => 0,
+                                              'owning_collection' => 0,
+                                              'item_id' => 0,
+                                              'last_modified' => '1970-01-01',
+                                              'in_archive' => 'f',
+                                              'withdrawn' => 'f',
+                                             }])
+      allow(PG).to receive(:connect).with({}).and_return(pg)
+    end
+
+    subject { described_class.new }
+
+    context 'with an identifier' do
+      let(:item) { subject.item(123) }
+      
+      it 'creates an Item object' do
+        expect(item).to be_a(DSpace::Item)
+      end
+    end
+
+    context 'with an identifier, an organization, and a division' do
+      let(:item) { subject.item(123, organization: 'Test College', division: 'Test Division') }
+      
+      it 'creates an Item object' do
+        expect(item).to be_a(DSpace::Item)
+        expect(item.organization).to eq('Test College')
+        expect(item.division).to eq('Test Division')
+      end
     end
   end
   

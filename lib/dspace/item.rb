@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
+require 'bagit'
+require 'csv'
 require 'json'
 require 'rdf/vocab'
-require 'csv'
 require_relative 'zip_file_generator'
-require 'bagit'
 
 module DSpace
 
   LANGUAGE_MAP = {
-
     'it' => 'Italian',
     'es' => 'Spanish',
     'fr' => 'French',
@@ -21,7 +20,6 @@ module DSpace
   }
 
   class Item
-
     attr_reader :id, :submitter, :in_archive, :withdrawn, :last_modified, :owning_collection, :bundle, :metadata_fields, :department, :division, :organization
 
     def initialize(id, options = {})
@@ -42,8 +40,8 @@ module DSpace
 
       if @owning_collection
         @owning_collection.items << self
-        @department = @owning_collection.communities.fetch(:dept, @department)
-        @division = @owning_collection.communities.fetch(:div, @division)
+        @department = @owning_collection.communities.fetch(:department, @department)
+        @division = @owning_collection.communities.fetch(:division, @division)
       end
     end
 
