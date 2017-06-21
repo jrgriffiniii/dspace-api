@@ -100,9 +100,9 @@ module DSpace
         :embargo => 'http://projecthydra.org/ns/auth/acl#hasEmbargo'
       }
 
-      if crosswalk.has_key? qualifier.to_sym
+      if qualifier && crosswalk.has_key?(qualifier.to_sym)
         crosswalk[qualifier.to_sym]
-      elsif crosswalk.has_key? element.to_sym
+      elsif crosswalk.has_key?(element.to_sym)
         crosswalk[element.to_sym]
       else
         raise NotImplementedError.new "#{element}.#{qualifier} is not a supported metadata attribute"
@@ -155,7 +155,7 @@ module DSpace
       bag.add_file(File.basename(csv_path), csv_path)
 
       # Add the file(s) from the bundle
-      @bundle.each do |bitstreams|
+      @bundle.each do |bitstream|
         bag.add_file(File.basename(bitstream.file), bitstream.file)
       end
 

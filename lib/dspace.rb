@@ -1,11 +1,6 @@
-
-require 'date'
-
-module DSpace
-  autoload :Item, 'dspace/item'
-  autoload :Bitstream, 'dspace/bitstream'
-  autoload :EPerson, 'dspace/eperson'
-  autoload :Collection, 'dspace/collection'
-  autoload :Connection, 'dspace/connection'
-  autoload :MetadataField, 'dspace/metadata_field'
-end
+require_relative 'dspace/item'
+require_relative 'dspace/bitstream'
+require_relative 'dspace/eperson'
+require_relative 'dspace/collection'
+require_relative 'dspace/connection'
+require_relative 'dspace/metadata_field'
